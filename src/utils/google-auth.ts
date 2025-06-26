@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { GoogleAuth } from 'google-auth-library';
+import { GoogleAuth, GoogleAuthOptions } from 'google-auth-library';
 import { GOOGLE_SHEETS_SCOPES } from '../config/constants.js';
 
 let authClient: GoogleAuth | null = null;
@@ -7,7 +7,7 @@ let sheetsClient: any = null;
 
 export async function getAuthClient(): Promise<GoogleAuth> {
   if (!authClient) {
-    const options: any = {
+    const options: GoogleAuthOptions = {
       scopes: GOOGLE_SHEETS_SCOPES,
     };
 
@@ -15,8 +15,13 @@ export async function getAuthClient(): Promise<GoogleAuth> {
       options.projectId = process.env.GOOGLE_PROJECT_ID;
     }
 
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      options.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    const credentials = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (credentials) {
+      if (credentials.trim().startsWith('{')) {
+        options.credentials = JSON.parse(credentials);
+      } else {
+        options.keyFilename = credentials;
+      }
     }
 
     authClient = new GoogleAuth(options);
